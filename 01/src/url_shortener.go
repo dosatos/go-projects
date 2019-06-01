@@ -1,10 +1,12 @@
 package main
 
 import (
-	"fmt"
+	"log"
 	"math/rand"
 	"path"
 	"strconv"
+
+	"github.com/davecgh/go-spew/spew"
 )
 
 const (
@@ -15,20 +17,22 @@ type MyShortener struct {
 	storage map[string]string
 }
 
+func NewMyShortner() *MyShortener {
+	var s MyShortener
+	s.storage = make(map[string]string)
+	log.Printf("A new shortener has bee initalized: %v\n", s)
+	return &s
+}
+
 func (s *MyShortener) Shorten(url string) string {
 	var short string
-	if s.storage == nil {
-		s.storage = make(map[string]string)
-	}
 	for {
 		suffix := strconv.Itoa(rand.Intn(2 ^ 32))
 		short = path.Join(baseURL, suffix)
 		if _, ok := s.storage[short]; ok {
-			fmt.Println("Ouch")
 			continue
 		}
 		s.storage[short] = url
-		fmt.Println(s.storage)
 		break
 	}
 	return short
@@ -38,22 +42,20 @@ func (s *MyShortener) Resolve(url string) string {
 	if _, ok := s.storage[url]; ok {
 		return s.storage[url]
 	}
-	fmt.Printf("Cannot resolve for the short url `%v` as it was not shortened before.\n", url)
+	log.Printf("Cannot resolve for the short url `%v` as it was not shortened before.\n", url)
 	return ""
 }
 
 func main() {
 	urls := []string{"https://www.google.com/", "http://amazon.com", "http://one-more.io"}
-	s := new(MyShortener)
+	s := NewMyShortner()
 	for _, long := range urls {
-		fmt.Printf("Shortenning for: %v", long)
-		fmt.Printf("Type: %T, Value: %v\n", s, s)
+		log.Printf("Shortenning for: %v\n", long)
 		short := s.Shorten(long)
-		fmt.Printf("Short: %v\n", short)
+		log.Printf("Short: %v\n", short)
 		resolved := s.Resolve(short)
-		fmt.Printf("Long: %v\n", resolved)
-		fmt.Println()
+		log.Printf("Long: %v\n\n", resolved)
 	}
 	s.Resolve("Unknown url")
-	fmt.Print(s.storage)
+	log.Printf("Storage: %v", spew.Sdump(s.storage))
 }
