@@ -2,60 +2,50 @@ package main
 
 import (
 	"log"
-	"math/rand"
-	"path"
-	"strconv"
-
-	"github.com/davecgh/go-spew/spew"
+	"regexp"
+	"sort"
+	"strings"
 )
 
-const (
-	baseURL = "http://short.io/"
-)
-
-type MyShortener struct {
-	storage map[string]string
+type wordCount struct {
+	word  string
+	count int
 }
 
-func NewMyShortner() *MyShortener {
-	var s MyShortener
-	s.storage = make(map[string]string)
-	log.Printf("A new shortener has bee initalized: %v\n", s)
-	return &s
-}
+func count(text string) (result []string) {
+	text = strings.ToLower(text)
+	r, _ := regexp.Compile(`(\w+)`)
+	storage := make(map[string]int)
+	for _, word := range r.FindAllString(text, -1) {
+		storage[word] += 1
+	}
 
-func (s *MyShortener) Shorten(url string) string {
-	var short string
-	for {
-		suffix := strconv.Itoa(rand.Intn(2 ^ 32))
-		short = path.Join(baseURL, suffix)
-		if _, ok := s.storage[short]; ok {
-			continue
+	// Transforming into a wordCount struct
+	var countedWords []wordCount
+	for word, count := range storage {
+		countedWords = append(countedWords, wordCount{
+			word: word, count: count,
+		})
+	}
+
+	// O(nlog(n)) ???
+	sort.Slice(countedWords, func(a, b int) bool {
+		return countedWords[a].count > countedWords[b].count
+	})
+
+	// fmt.Println(countedWords)
+
+	// O(1) - space / time
+	for i, wc := range countedWords {
+		if i == 10 {
+			break
 		}
-		s.storage[short] = url
-		break
+		result = append(result, wc.word)
 	}
-	return short
-}
-
-func (s *MyShortener) Resolve(url string) string {
-	if _, ok := s.storage[url]; ok {
-		return s.storage[url]
-	}
-	log.Printf("Cannot resolve for the short url `%v` as it was not shortened before.\n", url)
-	return ""
+	return result
 }
 
 func main() {
-	urls := []string{"https://www.google.com/", "http://amazon.com", "http://one-more.io"}
-	s := NewMyShortner()
-	for _, long := range urls {
-		log.Printf("Shortenning for: %v\n", long)
-		short := s.Shorten(long)
-		log.Printf("Short: %v\n", short)
-		resolved := s.Resolve(short)
-		log.Printf("Long: %v\n\n", resolved)
-	}
-	s.Resolve("Unknown url")
-	log.Printf("Storage: %v", spew.Sdump(s.storage))
+	log.Println(count("Lorem Ipsum is simply dummy text of the printing and typesetting industry. Lorem Ipsum has been the industry's standard dummy text ever since the 1500s, when an unknown printer took a galley of type and scrambled it to make a type specimen book. It has survived not only five centuries, but also the leap into electronic typesetting, remaining essentially unchanged. It was popularised in the 1960s with the release of Letraset sheets containing Lorem Ipsum passages, and more recently with desktop publishing software like Aldus PageMaker including versions of Lorem Ipsum."))
+	log.Println(count("Lorem Ipsum is simply dummy text of the printing and the"))
 }
