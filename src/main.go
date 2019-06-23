@@ -1,25 +1,45 @@
-// Написать функцию находящую максимальный элемент в слайсе
-// с произвольными элементами ([]interface{}) с использованием
-// пользовательской функции-компаратора.
+// Double linked list
 
 package main
 
 import (
-	"log"
+	"fmt"
 )
 
-func max(items ...int) int {
-    maxSoFar := items[0]
-    for _, item := range items {
-        if item > maxSoFar {
-            maxSoFar = item
-        }
-    }
-    return maxSoFar
+type Node struct {
+	val  string
+	next *Node
+	prev *Node
+}
+
+func (curr *Node) Add(node *Node) {
+	// iterates until the end of the LL
+	// to add new Node
+	for {
+		if curr.next == nil {
+			curr.next, (*node).prev = node, curr // node.prev == (*node).prev
+			break
+		}
+		curr = curr.next
+	}
 }
 
 func main() {
-	example := []int{-1, -19, -19, -2, -3, -6}
-    log.Printf("Max number: %v", max(example...))
-    log.Printf("Max number: %v", max(1, -3, 2, 3, 0))
+	var nodes []Node
+	nodes = []Node{
+		Node{val: "Zero"},
+		Node{val: "One"},
+		Node{val: "Two"},
+	}
+	fmt.Printf("%v\n", nodes)
+
+	// Adding nodes to the Linked List
+	head := &nodes[0]
+	for i := 0; i < len(nodes); i++ {
+		if &nodes[i] == head {
+			continue
+		}
+		(*head).Add(&nodes[i]) // (*head).Add == head.Add
+	}
+	fmt.Printf("%v\n", nodes)
 }
